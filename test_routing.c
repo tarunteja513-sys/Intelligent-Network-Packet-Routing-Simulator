@@ -29,7 +29,7 @@ int main()
      * Number of routers currently used
      * in this test network.
      */
-    int n = 4;
+    int n = 5;
 
     /*
      * Network connections
@@ -94,7 +94,7 @@ int main()
     printf("1 = Router 1\n");
     printf("2 = Router 2\n");
     printf("3 = Router 3\n");
-
+    printf("4 = Router 4\n");
     /*
      * Start Dijkstra's algorithm.
      *
