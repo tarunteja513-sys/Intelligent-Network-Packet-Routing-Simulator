@@ -1,20 +1,23 @@
 #ifndef CONGESTION_H
 #define CONGESTION_H
+
 #define MAX_ROUTERS 20
-#define QUEUE_SIZE 20
+#define CONGESTION_QUEUE_SIZE 20
+
 typedef struct
 {
     int packetId;
     int source;
     int destination;
-} Packet;
+} CongestionPacket;
+
 typedef struct
 {
-    Packet packets[QUEUE_SIZE];
+    CongestionPacket packets[CONGESTION_QUEUE_SIZE];
     int front;
     int rear;
     int count;
-} PacketQueue;
+} CongestionQueue;
 
 typedef struct
 {
@@ -25,20 +28,38 @@ typedef struct
     int packetsSent;
     int packetsDropped;
     int congestion;
-    PacketQueue queue;
-} Router;
-void initializeQueue(PacketQueue *queue);
-int isQueueEmpty(PacketQueue *queue);
-int isQueueFull(PacketQueue *queue);
-void enqueue(PacketQueue *queue, Packet packet);
-Packet dequeue(PacketQueue *queue);
-void initializeRouters(Router routers[], int n);
-void addPacket(Router routers[], int router, Packet packet);
-void sendPacket(Router routers[], int router);
-void dropPacket(Router routers[], int router);
-void calculateCongestion(Router routers[], int n);
-int findMostCongested(Router routers[], int n);
-void displayQueue(PacketQueue *queue);
-void displayRouters(Router routers[], int n);
-void displayStatistics(Router routers[], int n);
+    CongestionQueue queue;
+} CongestionRouter;
+
+void initializeCongestionQueue(CongestionQueue *queue);
+
+int isCongestionQueueEmpty(CongestionQueue *queue);
+
+int isCongestionQueueFull(CongestionQueue *queue);
+
+void enqueueCongestion(CongestionQueue *queue,
+                        CongestionPacket packet);
+
+CongestionPacket dequeueCongestion(CongestionQueue *queue);
+
+void initializeRouters(CongestionRouter routers[], int n);
+
+void addPacket(CongestionRouter routers[],
+               int router,
+               CongestionPacket packet);
+
+void sendPacket(CongestionRouter routers[], int router);
+
+void dropPacket(CongestionRouter routers[], int router);
+
+void calculateCongestion(CongestionRouter routers[], int n);
+
+int findMostCongested(CongestionRouter routers[], int n);
+
+void displayCongestionQueue(CongestionQueue *queue);
+
+void displayCongestionRouters(CongestionRouter routers[], int n);
+
+void displayStatistics(CongestionRouter routers[], int n);
+
 #endif
