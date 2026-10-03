@@ -6,25 +6,30 @@ Router routers[MAX_ROUTERS];
 int graph[MAX_ROUTERS][MAX_ROUTERS];
 int routerCount = 0;
 
-/* Initialize the adjacency matrix */
-void initializeGraph()
+
+/* Set up an empty graph */
+void initializeGraph(void)
 {
-    for (int i = 0; i < MAX_ROUTERS; i++)
+    int row, col;
+
+    for (row = 0; row < MAX_ROUTERS; row++)
     {
-        for (int j = 0; j < MAX_ROUTERS; j++)
+        for (col = 0; col < MAX_ROUTERS; col++)
         {
-            if (i == j)
-                graph[i][j] = 0;
-            else
-                graph[i][j] = INF;
+            graph[row][col] = (row == col) ? 0 : INF;
         }
     }
+
+    routerCount = 0;
 }
 
-/* Add a router */
-void addRouter()
+
+/* Add one or more routers */
+void addRouter(void)
 {
-    int count;
+    int number;
+    int index, existing;
+    int duplicate;
 
     if (routerCount >= MAX_ROUTERS)
     {
@@ -32,64 +37,83 @@ void addRouter()
         return;
     }
 
-    printf("\nHow many routers do you want to add? ");
-    scanf("%d", &count);
+    printf("\nNumber of routers to add: ");
+    scanf("%d", &number);
 
-    if (count <= 0)
+    if (number <= 0 || routerCount + number > MAX_ROUTERS)
     {
-        printf("Invalid number of routers.\n");
+        printf("\nInvalid number of routers.\n");
+
+        if (number > MAX_ROUTERS - routerCount)
+            printf("Only %d router(s) can be added.\n",
+                   MAX_ROUTERS - routerCount);
+
         return;
     }
 
-    if (routerCount + count > MAX_ROUTERS)
+    for (index = 0; index < number; index++)
     {
-        printf("\nYou can add only %d more router(s).\n",
-               MAX_ROUTERS - routerCount);
-        return;
-    }
+        do
+        {
+            duplicate = 0;
 
-    for (int i = 0; i < count; i++)
-    {
+            printf("Enter name for router %d: ", routerCount);
+            scanf("%19s", routers[routerCount].name);
+
+            for (existing = 0; existing < routerCount; existing++)
+            {
+                if (strcmp(routers[existing].name,
+                           routers[routerCount].name) == 0)
+                {
+                    duplicate = 1;
+                    printf("Name already exists. Enter another name.\n");
+                    break;
+                }
+            }
+
+        } while (duplicate);
+
         routers[routerCount].id = routerCount;
 
-        printf("\nEnter name for Router %d: ",
-               routerCount);
-
-        scanf("%19s", routers[routerCount].name);
-
-        printf("Router %s added successfully. ID = %d\n",
+        printf("Router %s added with ID %d.\n",
                routers[routerCount].name,
                routers[routerCount].id);
 
         routerCount++;
     }
 
-    printf("\n%d router(s) added successfully.\n", count);
+    printf("\n%d router(s) added successfully.\n", number);
 }
-/* Display all routers */
-void displayRouters()
+
+
+/* Show the routers currently present */
+void displayRouters(void)
 {
+    int i;
+
     if (routerCount == 0)
     {
         printf("\nNo routers available.\n");
         return;
     }
 
-    printf("\n----- Routers -----\n");
+    printf("\n------------- ROUTERS -------------\n");
 
-    for (int i = 0; i < routerCount; i++)
+    for (i = 0; i < routerCount; i++)
     {
-        printf("ID: %d\tName: %s\n",
+        printf("ID: %-3d Name: %s\n",
                routers[i].id,
                routers[i].name);
     }
 }
 
-/* Add a communication link */
-void addLink()
+
+/* Add communication links */
+void addLink(void)
 {
-    int count;
+    int number;
     int source, destination, cost;
+    int link;
 
     if (routerCount < 2)
     {
@@ -97,41 +121,39 @@ void addLink()
         return;
     }
 
-    printf("\nHow many links do you want to add? ");
-    scanf("%d", &count);
+    printf("\nNumber of links to add: ");
+    scanf("%d", &number);
 
-    if (count <= 0)
+    if (number <= 0)
     {
-        printf("Invalid number of links.\n");
+        printf("\nInvalid number of links.\n");
         return;
     }
 
-    for (int i = 0; i < count; i++)
+    for (link = 0; link < number; link++)
     {
-        printf("\n========== LINK %d ==========\n", i + 1);
+        printf("\n------------- LINK %d -------------\n", link + 1);
 
         displayRouters();
 
-        printf("\nEnter source router ID: ");
+        printf("Source router ID: ");
         scanf("%d", &source);
 
-        printf("Enter destination router ID: ");
+        printf("Destination router ID: ");
         scanf("%d", &destination);
 
         if (source < 0 || source >= routerCount ||
             destination < 0 || destination >= routerCount)
         {
-            printf("Invalid router ID.\n");
-            printf("Please enter this link again.\n");
-            i--;
+            printf("Invalid router ID. Try again.\n");
+            link--;
             continue;
         }
 
         if (source == destination)
         {
-            printf("A router cannot be connected to itself.\n");
-            printf("Please enter this link again.\n");
-            i--;
+            printf("A router cannot connect to itself.\n");
+            link--;
             continue;
         }
 
@@ -140,9 +162,7 @@ void addLink()
             printf("A link already exists between %s and %s.\n",
                    routers[source].name,
                    routers[destination].name);
-
-            printf("Please enter a different link.\n");
-            i--;
+            link--;
             continue;
         }
 
@@ -152,28 +172,29 @@ void addLink()
         if (cost <= 0)
         {
             printf("Link cost must be positive.\n");
-            printf("Please enter this link again.\n");
-            i--;
+            link--;
             continue;
         }
 
         graph[source][destination] = cost;
         graph[destination][source] = cost;
 
-        printf("\nLink %d added successfully.\n", i + 1);
-        printf("%s <---- %d ----> %s\n",
+        printf("Link created: %s <--- %d ---> %s\n",
                routers[source].name,
                cost,
                routers[destination].name);
     }
 
-    printf("\n%d link(s) added successfully.\n", count);
+    printf("\n%d link(s) added successfully.\n", number);
 }
-/* Remove a router */
-void removeRouter()
+
+
+/* Remove routers and update the matrix */
+void removeRouter(void)
 {
-    int count;
+    int number;
     int id;
+    int i, j, step;
 
     if (routerCount == 0)
     {
@@ -181,77 +202,56 @@ void removeRouter()
         return;
     }
 
-    printf("\nHow many routers do you want to remove? ");
-    scanf("%d", &count);
+    printf("\nNumber of routers to remove: ");
+    scanf("%d", &number);
 
-    if (count <= 0)
+    if (number <= 0 || number > routerCount)
     {
-        printf("Invalid number of routers.\n");
+        printf("\nInvalid number of routers.\n");
         return;
     }
 
-    if (count > routerCount)
+    for (step = 0; step < number; step++)
     {
-        printf("\nYou can remove only %d router(s).\n", routerCount);
-        return;
-    }
-
-    for (int k = 0; k < count; k++)
-    {
-        printf("\n========== REMOVE ROUTER %d ==========\n", k + 1);
-
         displayRouters();
 
-        printf("\nEnter router ID to remove: ");
+        printf("\nRouter ID to remove: ");
         scanf("%d", &id);
 
         if (id < 0 || id >= routerCount)
         {
-            printf("Invalid router ID.\n");
-            printf("Please enter the router again.\n");
-            k--;
+            printf("Invalid router ID. Try again.\n");
+            step--;
             continue;
         }
 
-        printf("\nRemoving router: %s\n", routers[id].name);
+        printf("Removing router %s...\n", routers[id].name);
 
-        /*
-         * Shift router information left.
-         */
-        for (int i = id; i < routerCount - 1; i++)
+        /* Move router records */
+        for (i = id; i < routerCount - 1; i++)
         {
             routers[i] = routers[i + 1];
             routers[i].id = i;
         }
 
-        /*
-         * Shift rows of adjacency matrix.
-         */
-        for (int i = id; i < routerCount - 1; i++)
+        /* Move matrix rows */
+        for (i = id; i < routerCount - 1; i++)
         {
-            for (int j = 0; j < routerCount; j++)
-            {
+            for (j = 0; j < routerCount; j++)
                 graph[i][j] = graph[i + 1][j];
-            }
         }
 
-        /*
-         * Shift columns of adjacency matrix.
-         */
-        for (int i = 0; i < routerCount - 1; i++)
+        /* Move matrix columns */
+        for (i = 0; i < routerCount - 1; i++)
         {
-            for (int j = id; j < routerCount - 1; j++)
-            {
+            for (j = id; j < routerCount - 1; j++)
                 graph[i][j] = graph[i][j + 1];
-            }
         }
 
         routerCount--;
 
-        /*
-         * Reset unused row and column.
-         */
-        for (int i = 0; i < MAX_ROUTERS; i++)
+        /* Clear the unused row and column */
+        for (i = 0; i < MAX_ROUTERS; i++)
         {
             graph[routerCount][i] = INF;
             graph[i][routerCount] = INF;
@@ -262,12 +262,15 @@ void removeRouter()
         printf("Router removed successfully.\n");
     }
 
-    printf("\n%d router(s) removed successfully.\n", count);
+    printf("\n%d router(s) removed successfully.\n", number);
 }
-/* Change the cost of an existing link */
-void changeLink()
+
+
+/* Modify the cost of an existing link */
+void changeLink(void)
 {
-    int source, destination, newCost;
+    int source, destination;
+    int cost;
 
     if (routerCount < 2)
     {
@@ -277,10 +280,10 @@ void changeLink()
 
     displayRouters();
 
-    printf("\nEnter source router ID: ");
+    printf("\nSource router ID: ");
     scanf("%d", &source);
 
-    printf("Enter destination router ID: ");
+    printf("Destination router ID: ");
     scanf("%d", &destination);
 
     if (source < 0 || source >= routerCount ||
@@ -292,7 +295,7 @@ void changeLink()
 
     if (source == destination)
     {
-        printf("A router cannot be connected to itself.\n");
+        printf("A router cannot connect to itself.\n");
         return;
     }
 
@@ -302,33 +305,30 @@ void changeLink()
         return;
     }
 
-    printf("Current link cost: %d\n",
-           graph[source][destination]);
+    printf("Current cost: %d\n", graph[source][destination]);
 
-    printf("Enter new link cost: ");
-    scanf("%d", &newCost);
+    printf("Enter new cost: ");
+    scanf("%d", &cost);
 
-    if (newCost <= 0)
+    if (cost <= 0)
     {
         printf("Link cost must be positive.\n");
         return;
     }
 
-    graph[source][destination] = newCost;
-    graph[destination][source] = newCost;
+    graph[source][destination] = cost;
+    graph[destination][source] = cost;
 
-    printf("\nLink cost changed successfully.\n");
-    printf("%s <---- %d ----> %s\n",
-           routers[source].name,
-           newCost,
-           routers[destination].name);
+    printf("Link cost updated successfully.\n");
 }
 
-/* Remove a communication link */
-void removeLink()
+
+/* Remove communication links */
+void removeLink(void)
 {
-    int count;
+    int number;
     int source, destination;
+    int step;
 
     if (routerCount < 2)
     {
@@ -336,57 +336,48 @@ void removeLink()
         return;
     }
 
-    printf("\nHow many links do you want to remove? ");
-    scanf("%d", &count);
+    printf("\nNumber of links to remove: ");
+    scanf("%d", &number);
 
-    if (count <= 0)
+    if (number <= 0)
     {
-        printf("Invalid number of links.\n");
+        printf("\nInvalid number of links.\n");
         return;
     }
 
-    for (int k = 0; k < count; k++)
+    for (step = 0; step < number; step++)
     {
-        printf("\n========== REMOVE LINK %d ==========\n", k + 1);
-
         displayRouters();
 
-        printf("\nEnter source router ID: ");
+        printf("\nSource router ID: ");
         scanf("%d", &source);
 
-        printf("Enter destination router ID: ");
+        printf("Destination router ID: ");
         scanf("%d", &destination);
 
         if (source < 0 || source >= routerCount ||
             destination < 0 || destination >= routerCount)
         {
-            printf("Invalid router ID.\n");
-            printf("Please enter the link again.\n");
-            k--;
+            printf("Invalid router ID. Try again.\n");
+            step--;
             continue;
         }
 
         if (source == destination)
         {
-            printf("A router cannot be connected to itself.\n");
-            printf("Please enter the link again.\n");
-            k--;
+            printf("A router cannot connect to itself.\n");
+            step--;
             continue;
         }
 
         if (graph[source][destination] == INF)
         {
-            printf("\nNo link exists between %s and %s.\n",
-                   routers[source].name,
-                   routers[destination].name);
-
-            printf("Please enter a different link.\n");
-            k--;
+            printf("No link exists between these routers.\n");
+            step--;
             continue;
         }
 
-        printf("\nRemoving link:\n");
-        printf("%s <---- %d ----> %s\n",
+        printf("Removing %s <--- %d ---> %s\n",
                routers[source].name,
                graph[source][destination],
                routers[destination].name);
@@ -397,12 +388,15 @@ void removeLink()
         printf("Link removed successfully.\n");
     }
 
-    printf("\n%d link(s) removed successfully.\n", count);
+    printf("\n%d link(s) removed successfully.\n", number);
 }
-/* Display network connections */
-void displayNetwork()
+
+
+/* Display the current network */
+void displayNetwork(void)
 {
-    int found = 0;
+    int i, j;
+    int connectionFound = 0;
 
     printf("\n========== NETWORK TOPOLOGY ==========\n");
 
@@ -412,33 +406,35 @@ void displayNetwork()
         return;
     }
 
-    for (int i = 0; i < routerCount; i++)
+    for (i = 0; i < routerCount; i++)
     {
         printf("%s -> ", routers[i].name);
 
-        for (int j = 0; j < routerCount; j++)
+        for (j = 0; j < routerCount; j++)
         {
-            if (graph[i][j] != INF &&
-                graph[i][j] != 0)
+            if (graph[i][j] != INF && graph[i][j] != 0)
             {
                 printf("%s(%d) ",
                        routers[j].name,
                        graph[i][j]);
 
-                found = 1;
+                connectionFound = 1;
             }
         }
 
         printf("\n");
     }
 
-    if (!found)
+    if (!connectionFound)
         printf("No communication links available.\n");
 }
 
-/* Display adjacency matrix */
-void displayMatrix()
+
+/* Print the adjacency matrix */
+void displayMatrix(void)
 {
+    int i, j;
+
     printf("\n========== ADJACENCY MATRIX ==========\n\n");
 
     if (routerCount == 0)
@@ -449,18 +445,16 @@ void displayMatrix()
 
     printf("%8s", "");
 
-    for (int i = 0; i < routerCount; i++)
-    {
+    for (i = 0; i < routerCount; i++)
         printf("%8s", routers[i].name);
-    }
 
     printf("\n");
 
-    for (int i = 0; i < routerCount; i++)
+    for (i = 0; i < routerCount; i++)
     {
         printf("%8s", routers[i].name);
 
-        for (int j = 0; j < routerCount; j++)
+        for (j = 0; j < routerCount; j++)
         {
             if (graph[i][j] == INF)
                 printf("%8s", "INF");

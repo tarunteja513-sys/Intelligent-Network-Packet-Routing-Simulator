@@ -4,45 +4,44 @@
 #include "congestion.h"
 
 #define MAX_NODES 20
-#define MAX_ROUTERS 20
+#define MAX_ROUTER_COUNT 20
 
-/* Member 3 */
 void dijkstra(int graph[MAX_NODES][MAX_NODES], int n, int source);
 
-/* Convert Member 1 graph for Member 3 */
-void prepareRoutingGraph(int routingGraph[MAX_NODES][MAX_NODES])
+void prepareRoutingGraph(int route[MAX_NODES][MAX_NODES])
 {
-    int i;
-    int j;
+    int row;
+    int col;
 
-    for (i = 0; i < MAX_NODES; i++)
+    for (row = 0; row < MAX_NODES; row++)
     {
-        for (j = 0; j < MAX_NODES; j++)
+        for (col = 0; col < MAX_NODES; col++)
         {
-            if (i < routerCount && j < routerCount)
+            if (row >= routerCount || col >= routerCount)
             {
-                if (graph[i][j] == INF)
-                    routingGraph[i][j] = 0;
-                else
-                    routingGraph[i][j] = graph[i][j];
+                route[row][col] = 0;
+            }
+            else if (graph[row][col] == INF)
+            {
+                route[row][col] = 0;
             }
             else
             {
-                routingGraph[i][j] = 0;
+                route[row][col] = graph[row][col];
             }
         }
     }
 }
 
-/* ================= MEMBER 1 ================= */
-
-void graphMenu()
+void graphMenu(void)
 {
-    int choice;
+    int option;
 
-    while (1)
+    do
     {
-        printf("\n========== NETWORK MENU ==========\n");
+        printf("\n====================================\n");
+        printf("         NETWORK TOPOLOGY\n");
+        printf("====================================\n");
         printf("1. Add Router\n");
         printf("2. Add Communication Link\n");
         printf("3. Display Routers\n");
@@ -51,13 +50,13 @@ void graphMenu()
         printf("6. Remove Router\n");
         printf("7. Change Link Cost\n");
         printf("8. Remove Link\n");
-        printf("9. Back to Main Menu\n");
-        printf("==================================\n");
+        printf("9. Return\n");
+        printf("====================================\n");
 
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+        printf("Select option: ");
+        scanf("%d", &option);
 
-        switch (choice)
+        switch (option)
         {
             case 1:
                 addRouter();
@@ -92,38 +91,39 @@ void graphMenu()
                 break;
 
             case 9:
-                return;
+                break;
 
             default:
-                printf("Invalid choice.\n");
+                printf("\nInvalid option.\n");
         }
-    }
-}
 
-/* ================= MEMBER 2 ================= */
+    } while (option != 9);
+}
 
 void packetMenu(PacketQueue *queue)
 {
-    int choice;
-    Packet packet;
+    int option;
+    Packet newPacket;
 
-    while (1)
+    do
     {
-        printf("\n========== PACKET MENU ==========\n");
+        printf("\n====================================\n");
+        printf("          PACKET MANAGEMENT\n");
+        printf("====================================\n");
         printf("1. Create and Add Packet\n");
         printf("2. Display Packets\n");
         printf("3. Transmit Packet\n");
-        printf("4. Back to Main Menu\n");
-        printf("=================================\n");
+        printf("4. Return\n");
+        printf("====================================\n");
 
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+        printf("Select option: ");
+        scanf("%d", &option);
 
-        switch (choice)
+        switch (option)
         {
             case 1:
-                createPacket(&packet);
-                enqueuePacket(queue, packet);
+                createPacket(&newPacket);
+                enqueuePacket(queue, newPacket);
                 break;
 
             case 2:
@@ -135,29 +135,27 @@ void packetMenu(PacketQueue *queue)
                 break;
 
             case 4:
-                return;
+                break;
 
             default:
-                printf("Invalid choice.\n");
+                printf("\nInvalid option.\n");
         }
-    }
+
+    } while (option != 4);
 }
 
-/* ================= MEMBER 3 ================= */
-
-void routingMenu()
+void routingMenu(void)
 {
-    int routingGraph[MAX_NODES][MAX_NODES];
+    int route[MAX_NODES][MAX_NODES];
     int source;
 
-    if (routerCount == 0)
+    if (routerCount <= 0)
     {
-        printf("\nNo routers are available.\n");
-        printf("Please add routers first.\n");
+        printf("\nNo routers have been added yet.\n");
         return;
     }
 
-    prepareRoutingGraph(routingGraph);
+    prepareRoutingGraph(route);
 
     displayRouters();
 
@@ -170,36 +168,33 @@ void routingMenu()
         return;
     }
 
-    dijkstra(routingGraph, routerCount, source);
+    dijkstra(route, routerCount, source);
 }
 
-/* ================= MEMBER 4 ================= */
-
-void congestionMenu()
+void congestionMenu(void)
 {
-    CongestionRouter routers[MAX_ROUTERS];
-    int choice;
-    int router;
-    int n;
+    CongestionRouter routerData[MAX_ROUTER_COUNT];
     CongestionPacket packet;
+    int option;
+    int routerId;
+    int routerTotal = routerCount;
 
-    n = routerCount;
-
-    if (n == 0)
+    if (routerTotal <= 0)
     {
-        printf("\nNo routers are available.\n");
-        printf("Please add routers first.\n");
+        printf("\nNo routers have been added yet.\n");
         return;
     }
 
-    if (n > MAX_ROUTERS)
-        n = MAX_ROUTERS;
+    if (routerTotal > MAX_ROUTER_COUNT)
+        routerTotal = MAX_ROUTER_COUNT;
 
-    initializeRouters(routers, n);
+    initializeRouters(routerData, routerTotal);
 
-    while (1)
+    do
     {
-        printf("\n========== CONGESTION MENU ==========\n");
+        printf("\n====================================\n");
+        printf("        CONGESTION MANAGEMENT\n");
+        printf("====================================\n");
         printf("1. Add Packet to Router\n");
         printf("2. Send Packet\n");
         printf("3. Drop Packet\n");
@@ -207,17 +202,17 @@ void congestionMenu()
         printf("5. Display Queue\n");
         printf("6. Display Traffic Statistics\n");
         printf("7. Find Most Congested Router\n");
-        printf("8. Back to Main Menu\n");
-        printf("=====================================\n");
+        printf("8. Return\n");
+        printf("====================================\n");
 
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+        printf("Select option: ");
+        scanf("%d", &option);
 
-        switch (choice)
+        switch (option)
         {
             case 1:
                 printf("Enter router number: ");
-                scanf("%d", &router);
+                scanf("%d", &routerId);
 
                 printf("Enter packet ID: ");
                 scanf("%d", &packet.packetId);
@@ -228,102 +223,109 @@ void congestionMenu()
                 printf("Enter destination router: ");
                 scanf("%d", &packet.destination);
 
-                addPacket(routers, router, packet);
+                addPacket(routerData, routerId, packet);
                 break;
 
             case 2:
                 printf("Enter router number: ");
-                scanf("%d", &router);
+                scanf("%d", &routerId);
 
-                sendPacket(routers, router);
+                sendPacket(routerData, routerId);
                 break;
 
             case 3:
                 printf("Enter router number: ");
-                scanf("%d", &router);
+                scanf("%d", &routerId);
 
-                dropPacket(routers, router);
+                dropPacket(routerData, routerId);
                 break;
 
             case 4:
-                displayCongestionRouters(routers, n);
+                displayCongestionRouters(routerData, routerTotal);
                 break;
 
             case 5:
                 printf("Enter router number: ");
-                scanf("%d", &router);
+                scanf("%d", &routerId);
 
-                if (router >= 0 && router < n)
+                if (routerId >= 0 && routerId < routerTotal)
                 {
                     displayCongestionQueue(
-                        &routers[router].queue
+                        &routerData[routerId].queue
                     );
                 }
                 else
                 {
-                    printf("Invalid router.\n");
+                    printf("Invalid router number.\n");
                 }
-
                 break;
 
             case 6:
-                displayStatistics(routers, n);
+                displayStatistics(routerData, routerTotal);
                 break;
 
             case 7:
-                calculateCongestion(routers, n);
+                calculateCongestion(routerData, routerTotal);
 
-                router = findMostCongested(routers, n);
+                routerId = findMostCongested(
+                    routerData,
+                    routerTotal
+                );
 
-                printf("\nMost Congested Router: %d\n", router);
-                printf("Congestion: %d%%\n",
-                       routers[router].congestion);
+                if (routerId >= 0)
+                {
+                    printf("\nMost Congested Router: %d\n",
+                           routerId);
+                    printf("Congestion: %d%%\n",
+                           routerData[routerId].congestion);
+                }
                 break;
 
             case 8:
-                return;
+                break;
 
             default:
-                printf("Invalid choice.\n");
+                printf("\nInvalid option.\n");
         }
-    }
+
+    } while (option != 8);
 }
 
-/* ================= MAIN ================= */
-
-int main()
+int main(void)
 {
-    int choice;
-    PacketQueue queue;
+    PacketQueue packetQueue;
+    int option;
 
     initializeGraph();
-    initializeQueue(&queue);
+    initializeQueue(&packetQueue);
 
-    printf("============================================\n");
-    printf(" INTELLIGENT NETWORK PACKET ROUTING SYSTEM\n");
+    printf("\n============================================\n");
+    printf("   INTELLIGENT NETWORK PACKET ROUTING SYSTEM\n");
     printf("============================================\n");
 
-    while (1)
+    do
     {
-        printf("\n\n=============== MAIN MENU ===============\n");
+        printf("\n============================================\n");
+        printf("                MAIN MENU\n");
+        printf("============================================\n");
         printf("1. Network Topology Management\n");
         printf("2. Packet Management\n");
         printf("3. Shortest Path Routing\n");
         printf("4. Congestion Management\n");
         printf("5. Exit\n");
-        printf("==========================================\n");
+        printf("============================================\n");
 
-        printf("Enter your choice: ");
-        scanf("%d", &choice);
+        printf("Select option: ");
+        scanf("%d", &option);
 
-        switch (choice)
+        switch (option)
         {
             case 1:
                 graphMenu();
                 break;
 
             case 2:
-                packetMenu(&queue);
+                packetMenu(&packetQueue);
                 break;
 
             case 3:
@@ -336,12 +338,13 @@ int main()
 
             case 5:
                 printf("\nProgram terminated.\n");
-                return 0;
+                break;
 
             default:
-                printf("\nInvalid choice. Try again.\n");
+                printf("\nInvalid option. Try again.\n");
         }
-    }
+
+    } while (option != 5);
 
     return 0;
 }

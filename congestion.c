@@ -10,18 +10,12 @@ void initializeCongestionQueue(CongestionQueue *queue)
 
 int isCongestionQueueEmpty(CongestionQueue *queue)
 {
-    if (queue->count == 0)
-        return 1;
-
-    return 0;
+    return queue->count <= 0;
 }
 
 int isCongestionQueueFull(CongestionQueue *queue)
 {
-    if (queue->count == CONGESTION_QUEUE_SIZE)
-        return 1;
-
-    return 0;
+    return queue->count >= CONGESTION_QUEUE_SIZE;
 }
 
 void enqueueCongestion(CongestionQueue *queue,
@@ -33,22 +27,14 @@ void enqueueCongestion(CongestionQueue *queue,
         return;
     }
 
-    queue->rear++;
-
-    if (queue->rear == CONGESTION_QUEUE_SIZE)
-        queue->rear = 0;
-
+    queue->rear = (queue->rear + 1) % CONGESTION_QUEUE_SIZE;
     queue->packets[queue->rear] = packet;
     queue->count++;
 }
 
 CongestionPacket dequeueCongestion(CongestionQueue *queue)
 {
-    CongestionPacket packet;
-
-    packet.packetId = -1;
-    packet.source = -1;
-    packet.destination = -1;
+    CongestionPacket packet = {-1, -1, -1};
 
     if (isCongestionQueueEmpty(queue))
     {
@@ -58,12 +44,14 @@ CongestionPacket dequeueCongestion(CongestionQueue *queue)
 
     packet = queue->packets[queue->front];
 
-    queue->front++;
-
-    if (queue->front == CONGESTION_QUEUE_SIZE)
-        queue->front = 0;
-
+    queue->front = (queue->front + 1) % CONGESTION_QUEUE_SIZE;
     queue->count--;
+
+    if (queue->count == 0)
+    {
+        queue->front = 0;
+        queue->rear = -1;
+    }
 
     return packet;
 }
@@ -102,7 +90,6 @@ void addPacket(CongestionRouter routers[],
 
         printf("Router %d queue is full.\n", router);
         printf("Packet %d dropped.\n", packet.packetId);
-
         return;
     }
 
@@ -175,7 +162,7 @@ void calculateCongestion(CongestionRouter routers[], int n)
 
     for (i = 0; i < n; i++)
     {
-        if (routers[i].capacity == 0)
+        if (routers[i].capacity <= 0)
         {
             routers[i].congestion = 0;
         }
@@ -184,30 +171,31 @@ void calculateCongestion(CongestionRouter routers[], int n)
             routers[i].congestion =
                 (routers[i].currentPackets * 100)
                 / routers[i].capacity;
-        }
 
-        if (routers[i].congestion > 100)
-            routers[i].congestion = 100;
+            if (routers[i].congestion > 100)
+                routers[i].congestion = 100;
+        }
     }
 }
 
 int findMostCongested(CongestionRouter routers[], int n)
 {
     int i;
-    int highest;
+    int selected = 0;
 
-    highest = 0;
+    if (n <= 0)
+        return -1;
 
     for (i = 1; i < n; i++)
     {
         if (routers[i].congestion >
-            routers[highest].congestion)
+            routers[selected].congestion)
         {
-            highest = i;
+            selected = i;
         }
     }
 
-    return highest;
+    return selected;
 }
 
 void displayCongestionQueue(CongestionQueue *queue)
@@ -221,9 +209,9 @@ void displayCongestionQueue(CongestionQueue *queue)
         return;
     }
 
-    position = queue->front;
-
     printf("\nPackets in Queue:\n");
+
+    position = queue->front;
 
     for (i = 0; i < queue->count; i++)
     {
@@ -236,10 +224,7 @@ void displayCongestionQueue(CongestionQueue *queue)
         printf("Destination: %d\n",
                queue->packets[position].destination);
 
-        position++;
-
-        if (position == CONGESTION_QUEUE_SIZE)
-            position = 0;
+        position = (position + 1) % CONGESTION_QUEUE_SIZE;
     }
 }
 
@@ -249,12 +234,11 @@ void displayCongestionRouters(CongestionRouter routers[], int n)
 
     calculateCongestion(routers, n);
 
-    printf("\nRouter Information\n");
-    printf("-----------------------------\n");
+    printf("\n========== ROUTER INFORMATION ==========\n");
 
     for (i = 0; i < n; i++)
     {
-        printf("Router: %d\n", routers[i].routerId);
+        printf("\nRouter: %d\n", routers[i].routerId);
         printf("Capacity: %d\n", routers[i].capacity);
         printf("Packets: %d\n", routers[i].currentPackets);
         printf("Congestion: %d%%\n",
@@ -267,45 +251,32 @@ void displayCongestionRouters(CongestionRouter routers[], int n)
         else
             printf("Status: LOW\n");
 
-        printf("-----------------------------\n");
+        printf("----------------------------------------\n");
     }
 }
 
 void displayStatistics(CongestionRouter routers[], int n)
 {
     int i;
-    int received;
-    int sent;
-    int dropped;
+    int totalReceived = 0;
+    int totalSent = 0;
+    int totalDropped = 0;
 
-    received = 0;
-    sent = 0;
-    dropped = 0;
-
-    printf("\nTraffic Statistics\n");
-    printf("-----------------------------\n");
+    printf("\n========== TRAFFIC STATISTICS ==========\n");
 
     for (i = 0; i < n; i++)
     {
-        printf("Router %d\n", routers[i].routerId);
+        printf("\nRouter %d\n", routers[i].routerId);
+        printf("Received: %d\n", routers[i].packetsReceived);
+        printf("Sent: %d\n", routers[i].packetsSent);
+        printf("Dropped: %d\n", routers[i].packetsDropped);
 
-        printf("Received: %d\n",
-               routers[i].packetsReceived);
-
-        printf("Sent: %d\n",
-               routers[i].packetsSent);
-
-        printf("Dropped: %d\n",
-               routers[i].packetsDropped);
-
-        printf("\n");
-
-        received = received + routers[i].packetsReceived;
-        sent = sent + routers[i].packetsSent;
-        dropped = dropped + routers[i].packetsDropped;
+        totalReceived += routers[i].packetsReceived;
+        totalSent += routers[i].packetsSent;
+        totalDropped += routers[i].packetsDropped;
     }
 
-    printf("Total Received: %d\n", received);
-    printf("Total Sent: %d\n", sent);
-    printf("Total Dropped: %d\n", dropped);
+    printf("\nTotal Received: %d\n", totalReceived);
+    printf("Total Sent: %d\n", totalSent);
+    printf("Total Dropped: %d\n", totalDropped);
 }

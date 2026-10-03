@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include "packet.h"
 
-int main()
+int main(void)
 {
     PacketQueue queue;
     Packet packet;
 
     initializeQueue(&queue);
 
-    printf("=== Packet Creation & Priority Queue Test ===\n");
+    printf("\n============================================\n");
+    printf("       PACKET PRIORITY QUEUE TEST\n");
+    printf("============================================\n");
 
     packet.packetID = 1;
     packet.source = 0;
@@ -31,14 +33,19 @@ int main()
     packet.size = 400;
     enqueuePacket(&queue, packet);
 
+    printf("\nCurrent Queue:\n");
     displayPackets(&queue);
 
-    printf("\n=== Transmission Order ===\n");
+    printf("\n============================================\n");
+    printf("          PACKET TRANSMISSION\n");
+    printf("============================================\n");
 
-    while (queue.count > 0)
+    while (queue.count != 0)
     {
         dequeuePacket(&queue);
     }
+
+    printf("\nAll packets have been transmitted.\n");
 
     return 0;
 }

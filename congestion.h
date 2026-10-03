@@ -28,13 +28,13 @@ typedef struct
     int packetsSent;
     int packetsDropped;
     int congestion;
+
     CongestionQueue queue;
 } CongestionRouter;
 
+/* Queue operations */
 void initializeCongestionQueue(CongestionQueue *queue);
-
 int isCongestionQueueEmpty(CongestionQueue *queue);
-
 int isCongestionQueueFull(CongestionQueue *queue);
 
 void enqueueCongestion(CongestionQueue *queue,
@@ -42,6 +42,7 @@ void enqueueCongestion(CongestionQueue *queue,
 
 CongestionPacket dequeueCongestion(CongestionQueue *queue);
 
+/* Router operations */
 void initializeRouters(CongestionRouter routers[], int n);
 
 void addPacket(CongestionRouter routers[],
@@ -49,17 +50,15 @@ void addPacket(CongestionRouter routers[],
                CongestionPacket packet);
 
 void sendPacket(CongestionRouter routers[], int router);
-
 void dropPacket(CongestionRouter routers[], int router);
 
+/* Congestion calculations */
 void calculateCongestion(CongestionRouter routers[], int n);
-
 int findMostCongested(CongestionRouter routers[], int n);
 
+/* Display functions */
 void displayCongestionQueue(CongestionQueue *queue);
-
 void displayCongestionRouters(CongestionRouter routers[], int n);
-
 void displayStatistics(CongestionRouter routers[], int n);
 
 #endif

@@ -8,7 +8,7 @@ typedef struct
     int packetID;
     int source;
     int destination;
-    int priority; // 1 = High, 2 = Medium, 3 = Low
+    int priority;
     int size;
 } Packet;
 

@@ -14,17 +14,15 @@ extern Router routers[MAX_ROUTERS];
 extern int graph[MAX_ROUTERS][MAX_ROUTERS];
 extern int routerCount;
 
-void initializeGraph();
+void initializeGraph(void);
+void addRouter(void);
+void addLink(void);
+void removeRouter(void);
+void changeLink(void);
+void removeLink(void);
 
-void addRouter();
-void addLink();
-
-void removeRouter();
-void changeLink();
-void removeLink();
-
-void displayRouters();
-void displayNetwork();
-void displayMatrix();
+void displayRouters(void);
+void displayNetwork(void);
+void displayMatrix(void);
 
 #endif

@@ -10,7 +10,7 @@ void initializeQueue(PacketQueue *queue)
 
 void createPacket(Packet *packet)
 {
-    printf("Enter Packet ID: ");
+    printf("\nEnter Packet ID: ");
     scanf("%d", &packet->packetID);
 
     printf("Enter Source Router: ");
@@ -28,9 +28,9 @@ void createPacket(Packet *packet)
 
 void enqueuePacket(PacketQueue *queue, Packet packet)
 {
-    if (queue->count == MAX_QUEUE_SIZE)
+    if (queue->count >= MAX_QUEUE_SIZE)
     {
-        printf("Queue is full. Packet cannot be added.\n");
+        printf("\nQueue is full. Packet cannot be added.\n");
         return;
     }
 
@@ -38,42 +38,52 @@ void enqueuePacket(PacketQueue *queue, Packet packet)
     queue->packets[queue->rear] = packet;
     queue->count++;
 
-    printf("Packet %d added to the queue.\n", packet.packetID);
+    printf("\nPacket %d added to the queue.\n", packet.packetID);
 }
 
 Packet dequeuePacket(PacketQueue *queue)
 {
-    Packet packet = {0, 0, 0, 0, 0};
+    Packet result = {0, 0, 0, 0, 0};
+    int selected;
+    int selectedPriority;
+    int position;
 
-    if (queue->count == 0)
+    if (queue->count <= 0)
     {
-        printf("Queue is empty. No packet to transmit.\n");
-        return packet;
+        printf("\nQueue is empty. No packet to transmit.\n");
+        return result;
     }
 
-    int bestIndex = queue->front;
-    int bestPriority = queue->packets[bestIndex].priority;
+    selected = queue->front;
+    selectedPriority = queue->packets[selected].priority;
 
-    for (int i = 1; i < queue->count; i++)
+    /* Find the highest-priority packet.
+       Smaller priority number means higher priority. */
+    for (position = 1; position < queue->count; position++)
     {
-        int index = (queue->front + i) % MAX_QUEUE_SIZE;
+        int current = (queue->front + position) % MAX_QUEUE_SIZE;
 
-        if (queue->packets[index].priority < bestPriority)
+        if (queue->packets[current].priority < selectedPriority)
         {
-            bestPriority = queue->packets[index].priority;
-            bestIndex = index;
+            selected = current;
+            selectedPriority = queue->packets[current].priority;
         }
     }
 
-    packet = queue->packets[bestIndex];
+    result = queue->packets[selected];
 
-    for (int i = bestIndex; i != queue->rear; i = (i + 1) % MAX_QUEUE_SIZE)
+    /* Shift the remaining packets */
+    while (selected != queue->rear)
     {
-        int nextIndex = (i + 1) % MAX_QUEUE_SIZE;
-        queue->packets[i] = queue->packets[nextIndex];
+        int next = (selected + 1) % MAX_QUEUE_SIZE;
+
+        queue->packets[selected] = queue->packets[next];
+        selected = next;
     }
 
-    queue->rear = (queue->rear - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
+    queue->rear =
+        (queue->rear - 1 + MAX_QUEUE_SIZE) % MAX_QUEUE_SIZE;
+
     queue->count--;
 
     if (queue->count == 0)
@@ -82,37 +92,38 @@ Packet dequeuePacket(PacketQueue *queue)
         queue->rear = -1;
     }
 
-    printf("Packet %d transmitted (Priority: %d).\n",
-           packet.packetID, packet.priority);
+    printf("\nPacket %d transmitted (Priority: %d).\n",
+           result.packetID,
+           result.priority);
 
-    return packet;
+    return result;
 }
 
 void displayPackets(const PacketQueue *queue)
 {
+    int position;
+
     if (queue->count == 0)
     {
-        printf("No packets in the queue.\n");
+        printf("\nNo packets in the queue.\n");
         return;
     }
 
-    printf("\nPackets in Queue:\n");
-    printf("---------------------------------------------\n");
+    printf("\n================ PACKET QUEUE ================\n");
     printf("ID\tSource\tDestination\tPriority\tSize\n");
-    printf("---------------------------------------------\n");
+    printf("------------------------------------------------\n");
 
-    for (int i = 0; i < queue->count; i++)
+    for (position = 0; position < queue->count; position++)
     {
-        int index = (queue->front + i) % MAX_QUEUE_SIZE;
-        Packet packet = queue->packets[index];
+        int index = (queue->front + position) % MAX_QUEUE_SIZE;
 
         printf("%d\t%d\t%d\t\t%d\t\t%d\n",
-               packet.packetID,
-               packet.source,
-               packet.destination,
-               packet.priority,
-               packet.size);
+               queue->packets[index].packetID,
+               queue->packets[index].source,
+               queue->packets[index].destination,
+               queue->packets[index].priority,
+               queue->packets[index].size);
     }
 
-    printf("---------------------------------------------\n");
+    printf("------------------------------------------------\n");
 }
